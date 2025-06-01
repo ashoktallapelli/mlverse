@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
 
-from llm import OllamaProvider, ClaudeProvider
+from llm.llm_provider_factory import LLMProviderFactory
 
 load_dotenv()  # load environment variable from .env
 
@@ -47,11 +47,12 @@ class MCPClient:
     async def ask_question(self, question):
         """Ask a question and get response"""
         if self.use_ollama:
-            ollama_provider = OllamaProvider(session=self.session, ollama_model=self.ollama_model)
-            return await ollama_provider.ask_ollama(question)
+            provider = LLMProviderFactory.create_provider("ollama", session=self.session, model=self.ollama_model)
+            return await provider.ask(question)
         else:
-            claude_provider = ClaudeProvider(session=self.session)
-            return await claude_provider.ask_claude(question)
+            provider = LLMProviderFactory.create_provider("claude", session=self.session,
+                                                          model="claude-3-5-sonnet-20241022")
+            return await provider.ask(question)
 
     async def chat_loop(self):
         """Run an interactive chat loop"""

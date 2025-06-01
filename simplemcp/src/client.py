@@ -6,8 +6,7 @@ from dotenv import load_dotenv
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
 
-from claude_provider import ClaudeProvider
-from ollama_provider import OllamaProvider
+from llm import OllamaProvider, ClaudeProvider
 
 load_dotenv()  # load environment variable from .env
 

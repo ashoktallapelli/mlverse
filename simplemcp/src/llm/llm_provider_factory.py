@@ -4,6 +4,7 @@ from llm.claude_provider import ClaudeProvider
 from llm.llm_provider import LLMProvider
 from llm.ollama_provider import OllamaProvider
 from llm.openai_provider import OpenAIProvider
+from llm.groq_provider import GroqProvider
 
 
 class LLMProviderFactory:
@@ -26,5 +27,11 @@ class LLMProviderFactory:
                 model=kwargs.get('model', 'gpt-4o'),
                 api_key=kwargs.get('api_key')
             )
+        elif provider_type.lower() == "groq":
+            return GroqProvider(
+                session,
+                model=kwargs.get('model', 'llama-3.3-70b-versatile'),
+                api_key=kwargs.get('api_key')
+            )
         else:
-            raise ValueError(f"Unknown provider type: {provider_type}. Supported: claude, ollama, openai")
+            raise ValueError(f"Unknown provider type: {provider_type}. Supported: claude, ollama, openai, groq")

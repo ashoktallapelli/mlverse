@@ -12,7 +12,7 @@ load_dotenv()  # load environment variable from .env
 
 
 class MCPClient:
-    def __init__(self, provider="ollama", model="llama3.2"):
+    def __init__(self, provider=None, model=None):
         # Initialize session and client objects
         self.session: Optional[ClientSession] = None
         self.exit_stack = AsyncExitStack()
@@ -93,7 +93,7 @@ async def main():
             pass
 
     # Get model name if specified
-    model = "llama3.2"  # default
+    model = None  # default
     if "--model" in sys.argv:
         try:
             model_index = sys.argv.index("--model") + 1

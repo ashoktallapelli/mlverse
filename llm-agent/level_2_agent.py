@@ -30,7 +30,7 @@ knowledge = UrlKnowledge(
 )
 
 # Store agent sessions in a SQLite database
-storage = SqliteStorage(table_name="agent_sessions", db_file="tmp/agent.db")
+storage = SqliteStorage(table_name="agent_sessions", db_file="tmp/agent2.db")
 
 agent = Agent(
     name="Agno Assist",

@@ -1,4 +1,8 @@
-# Embedding logic using Sentence Transformers
+from sentence_transformers import SentenceTransformer
 
-def embed_text(text):
-    return [0.0] * 768  # dummy vector
+model = SentenceTransformer('all-MiniLM-L6-v2')
+
+
+def embed_text(texts):
+    """Embeds a list of text chunks."""
+    return model.encode(texts, convert_to_numpy=True)

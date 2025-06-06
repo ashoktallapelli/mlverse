@@ -10,7 +10,7 @@ def run_web():
     subprocess.run(["streamlit", "run", "interfaces/web/web_main.py"])
 
 def run_api():
-    subprocess.run(["uvicorn", "interfaces.api.main:app", "--host", "0.0.0.0", "--port", "8000"])
+    subprocess.run(["uvicorn", "interfaces.api.api_main:app", "--host", "0.0.0.0", "--port", "1000"])
 
 def run_tui():
     subprocess.run(["python", "-m", "interfaces.tui.tui_main"])

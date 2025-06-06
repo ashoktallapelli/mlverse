@@ -77,4 +77,4 @@ def note_summary_prompt() -> str:
 
 
 if __name__ == "__main__":
-    mcp.run()
+    mcp.run(transport="streamable-http")

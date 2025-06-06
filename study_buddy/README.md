@@ -39,6 +39,9 @@ study_buddy/
 └── main.py                     # Entry point to select CLI, Web, or API
 
 
-For CLI:
+Run CLI:
 python main.py --mode cli upload "<path_to_pdf>"
 python main.py --mode cli ask "<question to ask>"
+
+Run Web:
+PYTHONPATH=. python main.py --mode web

@@ -7,7 +7,7 @@ def run_cli(extra_args):
 
 
 def run_web():
-    subprocess.run(["streamlit", "run", "interfaces/web/main.py"])
+    subprocess.run(["streamlit", "run", "interfaces/web/web_main.py"])
 
 def run_api():
     subprocess.run(["uvicorn", "interfaces.api.main:app", "--host", "0.0.0.0", "--port", "8000"])

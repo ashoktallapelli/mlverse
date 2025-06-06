@@ -29,10 +29,20 @@ def upload(path: str):
 
 
 @cli.command()
-def ask(question: str):
-    chunks = retrieve_relevant_chunks(question)
-    answer = answer_with_context(question, chunks)
-    typer.echo(answer)
+def ask():
+    typer.echo("💬 Ask me anything from your notes! Type 'quit' to exit.")
+    while True:
+        question = input("🧠 You: ")
+        if question.lower() in {"quit", "exit"}:
+            typer.echo("👋 Goodbye!")
+            break
+
+        try:
+            chunks = retrieve_relevant_chunks(question)
+            answer = answer_with_context(question, chunks)
+            typer.echo(f"🤖 Study Buddy: {answer}\n")
+        except Exception as e:
+            typer.echo(f"❌ Error: {e}")
 
 
 if __name__ == "__main__":

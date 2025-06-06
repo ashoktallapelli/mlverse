@@ -1,8 +1,10 @@
 import argparse
 import subprocess
+import sys
 
-def run_cli():
-    subprocess.run(["python", "interfaces/cli/main.py"])
+def run_cli(extra_args):
+    subprocess.run(["python", "-m", "interfaces.cli.cli_main"] + extra_args)
+
 
 def run_web():
     subprocess.run(["streamlit", "run", "interfaces/web/main.py"])
@@ -13,10 +15,10 @@ def run_api():
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--mode", choices=["cli", "web", "api"], required=True)
-    args = parser.parse_args()
+    args, unknown = parser.parse_known_args()  # unknown will capture extra args
 
     if args.mode == "cli":
-        run_cli()
+        run_cli(unknown)
     elif args.mode == "web":
         run_web()
     elif args.mode == "api":

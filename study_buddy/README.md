@@ -37,3 +37,8 @@ study_buddy/
 ├── requirements.txt
 ├── .env
 └── main.py                     # Entry point to select CLI, Web, or API
+
+
+For CLI:
+python main.py --mode cli upload "<path_to_pdf>"
+python main.py --mode cli ask "<question to ask>"

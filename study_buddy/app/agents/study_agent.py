@@ -1,11 +1,13 @@
 from agno.agent import Agent
-from agno.models.ollama import Ollama
+from dotenv import load_dotenv
 
 from config.llm_config import llm
 
+load_dotenv()
+
 study_agent = Agent(
     name="Agno Assist",
-    model=Ollama(id="llama3.2"),
+    model=llm,
     system_message="You are a helpful study assistant. Use the notes to answer user questions clearly and concisely.",
     add_datetime_to_instructions=True,
     # Add the chat history to the messages

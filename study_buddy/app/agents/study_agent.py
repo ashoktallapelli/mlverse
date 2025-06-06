@@ -26,4 +26,4 @@ def answer_with_context(question, context_chunks):
     Answer:"""
 
     response = study_agent.run(prompt)
-    return response.messages[-1].content  # ✅ Access like an object, not a dict
+    return response.messages[-1].content

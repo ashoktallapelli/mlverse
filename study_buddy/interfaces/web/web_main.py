@@ -10,13 +10,15 @@ from app.agents.study_agent import answer_with_context
 st.set_page_config(page_title="📘 AI Study Buddy", layout="wide")
 st.title("📘 AI Study Buddy")
 
-# --- Session state to hold chat history
+# --- Chat History State
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
+if "contexts" not in st.session_state:
+    st.session_state.contexts = []
 
-# --- File upload and indexing
+# --- Sidebar: File Upload and Actions
 with st.sidebar:
-    st.header("Upload your notes")
+    st.header("📂 Upload Notes")
     uploaded_file = st.file_uploader("Upload a PDF file", type=["pdf"])
 
     if uploaded_file:
@@ -28,25 +30,37 @@ with st.sidebar:
             index_text_chunks(chunks, embeddings)
             st.success("✅ PDF processed and indexed!")
 
-    if st.button("Clear Chat"):
+    if st.button("🧹 Clear Chat"):
         st.session_state.chat_history = []
+        st.session_state.contexts = []
 
-# --- Main chat interface
-st.markdown("### Ask questions from your notes below")
+# --- Chat Input
+st.markdown("### 🧠 Ask a question about your notes")
+question = st.chat_input("Enter your question here...")
 
-question = st.chat_input("Ask a question")
-
+# --- Process question
 if question:
-    with st.spinner("Thinking..."):
+    with st.spinner("🤔 Retrieving and thinking..."):
         context_chunks = retrieve_relevant_chunks(question)
         answer = answer_with_context(question, context_chunks)
 
-        # Save question & answer to history
+        # Save to chat history and contexts
         st.session_state.chat_history.append((question, answer))
+        st.session_state.contexts.append(context_chunks)
 
-# --- Display chat history in scrollable style
-for q, a in st.session_state.chat_history:
-    with st.chat_message("user"):
-        st.markdown(q)
-    with st.chat_message("assistant"):
-        st.markdown(a)
+# --- Display Chat History
+for idx, (q, a) in enumerate(st.session_state.chat_history):
+    with st.chat_message("user", avatar="👤"):
+        st.markdown(f"**You:**\n\n{q}")
+
+    with st.chat_message("assistant", avatar="🤖"):
+        st.markdown(f"**Study Buddy:**\n\n{a}", unsafe_allow_html=True)
+
+        # Show cited chunks (collapsed)
+        with st.expander("📎 Show Source Notes"):
+            for i, chunk in enumerate(st.session_state.contexts[idx]):
+                st.markdown(f"**Snippet {i+1}:**\n\n```text\n{chunk.strip()}\n```")
+
+# --- Footer
+st.markdown("---")
+st.caption("Powered by FAISS, SentenceTransformers, and LLM agents via Agno/Phidata")

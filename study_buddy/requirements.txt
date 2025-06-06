@@ -1,0 +1,9 @@
+starlette
+uvicorn
+faiss-cpu
+sentence-transformers
+PyPDF2
+numpy
+streamlit
+typer
+python-dotenv

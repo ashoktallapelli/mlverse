@@ -54,7 +54,7 @@ def get_latest_note() -> str:
     """
     ensure_file()
     with open(NOTES_FILE, "r") as f:
-        lines = f.readline()
+        lines = f.readlines()
     return lines[-1].strip() if lines else "No notes yet!"
 
 

@@ -23,4 +23,5 @@ dependencies = [
     "rich>=13.6.0",
     "typer>=0.9.0",
     "uvicorn>=0.24.0",
+    "yfinance>=0.2.61",
 ]

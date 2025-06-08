@@ -1,0 +1,17 @@
+.git
+.venv
+__pycache__
+*.pyc
+.pytest_cache
+.idea
+.DS_Store
+*.log
+.env.local
+.env.development
+.env.test
+.env.production
+tests/
+*.md
+uv.lock
+.python-version
+

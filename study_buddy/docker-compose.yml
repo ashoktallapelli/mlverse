@@ -1,0 +1,63 @@
+version: '3.8'
+
+services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: study-buddy-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    restart: unless-stopped
+    # Uncomment the next 3 lines if you have NVIDIA GPU support
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
+
+  study-buddy-api:
+    build: .
+    container_name: study-buddy-api
+    ports:
+      - "1000:1000"
+    env_file:
+      - .env
+    volumes:
+      - ./data:/app/data
+    restart: unless-stopped
+    environment:
+      - PYTHONPATH=/app
+      - OLLAMA_BASE_URL=http://ollama:11434
+    command: ["python", "main.py", "--mode", "api"]
+    depends_on:
+      - ollama
+
+  study-buddy-web:
+    build: .
+    container_name: study-buddy-web
+    ports:
+      - "8501:8501"
+    env_file:
+      - .env
+    volumes:
+      - ./data:/app/data
+    restart: unless-stopped
+    environment:
+      - PYTHONPATH=/app
+      - OLLAMA_BASE_URL=http://ollama:11434
+    command: ["python", "main.py", "--mode", "web"]
+    depends_on:
+      - ollama
+    profiles:
+      - web
+
+volumes:
+  ollama_data:
+    driver: local
+
+networks:
+  default:
+    name: study-buddy-network

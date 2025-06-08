@@ -17,4 +17,5 @@ dependencies = [
     "textual>=3.3.0",
     "typer>=0.16.0",
     "uvicorn>=0.34.3",
+    "chromadb>=1.0.12",
 ]

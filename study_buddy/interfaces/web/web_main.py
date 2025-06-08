@@ -69,4 +69,4 @@ for idx, (q, a) in enumerate(st.session_state.chat_history):
 
 # --- Footer
 st.markdown("---")
-st.caption(f"Powered by {VECTOR_DB.upper()}, SentenceTransformers, and LLM agents via Agno/Phidata")
+st.caption(f"Powered by {VECTOR_DB.upper()}, SentenceTransformers, and LLM agents via Agno")

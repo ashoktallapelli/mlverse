@@ -1,15 +1,17 @@
+import asyncio
 from pathlib import Path
 from textwrap import dedent
 
 from agno.agent import Agent
-from agno.models.ollama import Ollama
 from agno.tools.mcp import MCPTools
 from dotenv import load_dotenv
+
+from config.llm_config import llm
 
 load_dotenv()
 
 
-async def run_agent(message: str) -> str:
+async def run_agent_with_mcp(message: str) -> str:
     """Run the retail banking agent with the given message."""
     print(f"Starting agent with message: {message}")
 
@@ -23,7 +25,7 @@ async def run_agent(message: str) -> str:
 
             agent = Agent(
                 name="Study buddy",
-                model=Ollama(id="llama3.2"),
+                model=llm,
                 tools=[mcp_tools],
                 instructions=dedent("""\
                     You are a AI study assistant. Use the tools to access the file system.
@@ -50,10 +52,43 @@ async def run_agent(message: str) -> str:
         return f"Error: {e}"
 
 
+async def run_agent(message: str) -> str:
+    """Run the retail banking agent with the given message."""
+    print(f"Starting agent with message: {message}")
+
+    try:
+        agent = Agent(
+            name="Study buddy",
+            model=llm,
+            instructions=dedent("""\
+                    You are a AI study assistant. Use the tools to access the file system.
+                    - Use headings to organize your responses
+                    - Be concise and focus on relevant information\
+                """),
+            markdown=True,
+            show_tool_calls=True,
+        )
+        print("Agent created")
+
+        # Run the agent
+        print("Running agent...")
+        print("=" * 50)
+        response = await agent.arun(message, stream=False)
+        print("=" * 50)
+        print("Agent finished")
+        return response.content
+
+    except Exception as e:
+        print(f"Error occurred: {e}")
+        import traceback
+        traceback.print_exc()
+        return f"Error: {e}"
+
+
 # if __name__ == "__main__":
 #     # Basic example - exploring project license
 #     async def main():
-#         response = await run_agent("List all the accounts")
+#         response = await run_agent("List all the endpoints")
 #         print(response)
 #
 #

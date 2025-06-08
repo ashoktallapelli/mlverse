@@ -1,3 +1,5 @@
+import asyncio
+
 import streamlit as st
 
 from app.embedding.embedder import embed_text
@@ -39,11 +41,14 @@ with st.sidebar:
 st.markdown("### 🧠 Ask a question about your notes")
 question = st.chat_input("Enter your question here...")
 
+def get_data_sync(ques, chunks_):
+    return asyncio.run(answer_with_context(ques, chunks_))
+
 # --- Process question
 if question:
     with st.spinner("🤔 Retrieving and thinking..."):
         context_chunks = retrieve_relevant_chunks(question)
-        answer = answer_with_context(question, context_chunks)
+        answer = get_data_sync(question, context_chunks)
 
         # Save to chat history and contexts
         st.session_state.chat_history.append((question, answer))

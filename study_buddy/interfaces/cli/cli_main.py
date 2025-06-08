@@ -1,3 +1,5 @@
+import asyncio
+
 import typer
 
 from app.embedding.embedder import embed_text
@@ -40,7 +42,7 @@ def ask():
 
         try:
             chunks = retrieve_relevant_chunks(question)
-            answer = answer_with_context(question, chunks)
+            answer = asyncio.run(answer_with_context(question, chunks))
             typer.echo(f"🤖 Study Buddy: {answer}\n")
         except Exception as e:
             typer.echo(f"❌ Error: {e}")

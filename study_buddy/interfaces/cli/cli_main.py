@@ -6,6 +6,7 @@ from app.ingestion.pdf_reader import extract_text_from_pdf
 from app.embedding.indexer import index_text_chunks
 from app.embedding.retriever import retrieve_relevant_chunks
 from app.agents.study_agent import answer_with_context
+from config.settings import VECTOR_DB
 
 from app.utils.logger import logger
 
@@ -23,7 +24,7 @@ def upload(path: str):
     logger.info(f"Chunked into {len(chunks)} parts, embedding...")
     embeddings = embed_text(chunks)
 
-    logger.info("Indexing to FAISS...")
+    logger.info(f"Indexing to {VECTOR_DB.upper()}...")
     index_text_chunks(chunks, embeddings)
     logger.info("Indexing complete!")
 

@@ -3,7 +3,7 @@ study_buddy/
 ├── app/
 │   ├── agents/                 # Agent logic (RAG, LLM)
 │   │   └── study_agent.py
-│   ├── embedding/              # Embeddings + FAISS logic
+│   ├── embedding/              # Embeddings + vector DB logic
 │   │   ├── embedder.py
 │   │   ├── indexer.py
 │   │   └── retriever.py
@@ -28,7 +28,7 @@ study_buddy/
 │
 ├── data/                       # Uploaded files and vector index
 │   ├── uploads/
-│   └── faiss/
+│   └── faiss/                  # or chroma/
 │
 ├── tests/
 │   └── test_embedder.py
@@ -45,3 +45,5 @@ python main.py --mode cli ask "<question to ask>"
 
 Run Web:
 PYTHONPATH=. python main.py --mode web
+
+Set `VECTOR_DB=chroma` to use a persistent Chroma database instead of FAISS.

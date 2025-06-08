@@ -6,6 +6,7 @@ from app.ingestion.pdf_reader import extract_text_from_pdf
 from app.embedding.indexer import index_text_chunks
 from app.embedding.retriever import retrieve_relevant_chunks
 from app.agents.study_agent import answer_with_context
+from config.settings import VECTOR_DB
 
 st.set_page_config(page_title="📘 AI Study Buddy", layout="wide")
 st.title("📘 AI Study Buddy")
@@ -63,4 +64,4 @@ for idx, (q, a) in enumerate(st.session_state.chat_history):
 
 # --- Footer
 st.markdown("---")
-st.caption("Powered by FAISS, SentenceTransformers, and LLM agents via Agno/Phidata")
+st.caption(f"Powered by {VECTOR_DB.upper()}, SentenceTransformers, and LLM agents via Agno/Phidata")

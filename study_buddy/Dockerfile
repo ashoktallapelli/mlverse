@@ -6,6 +6,8 @@ WORKDIR /app
 # Install build dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
+    curl \
+    wget \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy only requirements for layer caching
@@ -18,6 +20,11 @@ RUN python -m venv /opt/venv && \
 
 # === Final Stage ===
 FROM python:3.11-slim
+
+# Install curl for health checks
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
 
 ENV VIRTUAL_ENV=/opt/venv
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
@@ -38,7 +45,7 @@ EXPOSE 1000 8501
 
 # Change this depending on your app type:
 # For CLI / API
-CMD ["python", "main.py", "--mode", "api"]
+# CMD ["python", "main.py", "--mode", "api"]
 
 # For Streamlit (if used):
-# CMD ["streamlit", "run", "main.py"]
+# CMD ["python", "main.py", "--mode", "web"]

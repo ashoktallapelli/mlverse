@@ -3,4 +3,9 @@ LLM_PROVIDER = "local"
 
 from agno.models.ollama import Ollama
 
-llm = Ollama(id="llama3.2")
+import os
+
+OLLAMA_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
+
+llm = Ollama(id="llama3.2",
+             host=OLLAMA_URL)

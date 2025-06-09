@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Study Buddy Docker Deployment Script
-# Usage: ./deploy.sh [api|web|both|down|logs|rebuild]
+# Usage: ./deploy.sh [api|web|both|ollama|all|down|logs|rebuild]
 
 set -e
 
@@ -62,32 +62,36 @@ build_image() {
 # Function to deploy API service
 deploy_api() {
     print_info "Deploying Study Buddy API..."
-    docker-compose up -d study-buddy-api
+    docker compose up -d ollama study-buddy-api
     print_success "API service deployed successfully!"
     print_info "API is available at: http://localhost:1000"
+    print_info "Ollama is available at: http://localhost:11434"
 }
 
 # Function to deploy Web service
 deploy_web() {
     print_info "Deploying Study Buddy Web Interface..."
-    docker-compose --profile web up -d study-buddy-web
+    docker compose --profile web up -d
     print_success "Web service deployed successfully!"
     print_info "Web interface is available at: http://localhost:8501"
+    print_info "API is available at: http://localhost:1000"
+    print_info "Ollama is available at: http://localhost:11434"
 }
 
 # Function to deploy both services
 deploy_both() {
     print_info "Deploying both API and Web services..."
-    docker-compose --profile web up -d
+    docker compose --profile web up -d
     print_success "Both services deployed successfully!"
     print_info "API is available at: http://localhost:1000"
     print_info "Web interface is available at: http://localhost:8501"
+    print_info "Ollama is available at: http://localhost:11434"
 }
 
 # Function to stop all services
 stop_services() {
     print_info "Stopping all Study Buddy services..."
-    docker-compose --profile web down
+    docker compose --profile web down
     print_success "All services stopped successfully!"
 }
 
@@ -96,26 +100,26 @@ show_logs() {
     local service="$1"
     if [ -z "$service" ]; then
         print_info "Showing logs for all services..."
-        docker-compose --profile web logs -f
+        docker compose --profile web logs -f
     else
         print_info "Showing logs for $service..."
-        docker-compose logs -f "$service"
+        docker compose logs -f "$service"
     fi
 }
 
 # Function to rebuild and redeploy
 rebuild_deploy() {
     print_info "Rebuilding and redeploying..."
-    docker-compose --profile web down
-    docker-compose build --no-cache
-    docker-compose --profile web up -d
+    docker compose --profile web down
+    docker compose build --no-cache
+    docker compose --profile web up -d
     print_success "Rebuild and redeploy completed!"
 }
 
 # Function to show service status
 show_status() {
     print_info "Current service status:"
-    docker-compose --profile web ps
+    docker compose --profile web ps
 }
 
 # Function to run health check
@@ -135,6 +139,41 @@ health_check() {
     else
         print_warning "Web service health check failed or service not running"
     fi
+    
+    # Check Ollama health
+    if curl -f http://localhost:11434/api/tags > /dev/null 2>&1; then
+        print_success "Ollama service is healthy"
+    else
+        print_warning "Ollama service health check failed or service not running"
+    fi
+}
+
+# Function to check network connectivity
+check_network() {
+    print_info "Checking network connectivity..."
+    
+    # Check if network exists
+    if docker network ls | grep -q "study-buddy-network"; then
+        print_success "study-buddy-network exists"
+        
+        # List containers on the network
+        print_info "Containers on the network:"
+        docker network inspect study-buddy-network --format '{{range .Containers}}{{.Name}} ({{.IPv4Address}}){{end}}' 2>/dev/null || true
+    else
+        print_warning "study-buddy-network does not exist"
+    fi
+}
+
+# Function to show service URLs
+show_urls() {
+    print_info "Service URLs:"
+    echo "  API:    http://localhost:1000"
+    echo "  Web:    http://localhost:8501"
+    echo "  Ollama: http://localhost:11434"
+    echo ""
+    echo "Health check endpoints:"
+    echo "  API Health: http://localhost:1000/health"
+    echo "  Ollama API: http://localhost:11434/api/tags"
 }
 
 # Function to show usage
@@ -146,14 +185,19 @@ show_usage() {
     echo "Commands:"
     echo "  api       Deploy only the API service (default)"
     echo "  web       Deploy only the Web interface"
+    echo "  ollama    Deploy only Ollama service"
     echo "  both      Deploy both API and Web services"
+    echo "  all       Deploy all services (Ollama, API, and Web)"
     echo "  down      Stop all services"
     echo "  logs      Show logs for all services"
     echo "  logs-api  Show logs for API service only"
     echo "  logs-web  Show logs for Web service only"
+    echo "  logs-ollama Show logs for Ollama service only"
     echo "  rebuild   Rebuild images and redeploy"
     echo "  status    Show current service status"
     echo "  health    Run health checks"
+    echo "  network   Check network connectivity"
+    echo "  urls      Show service URLs"
     echo "  help      Show this help message"
     echo ""
     echo "Examples:"
@@ -178,10 +222,20 @@ main() {
             check_env_file
             deploy_web
             ;;
+        "ollama")
+            check_docker
+            check_env_file
+            docker compose up -d ollama
+            ;;
         "both")
             check_docker
             check_env_file
             deploy_both
+            ;;
+        "all")
+            check_docker
+            check_env_file
+            docker compose up -d
             ;;
         "down")
             check_docker
@@ -198,6 +252,17 @@ main() {
         "logs-web")
             check_docker
             show_logs "study-buddy-web"
+            ;;
+        "logs-ollama")
+            check_docker
+            show_logs "study-buddy-ollama"
+            ;;
+        "network")
+            check_docker
+            check_network
+            ;;
+        "urls")
+            show_urls
             ;;
         "rebuild")
             check_docker

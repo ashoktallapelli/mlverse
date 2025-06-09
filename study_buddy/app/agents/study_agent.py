@@ -1,4 +1,3 @@
-import asyncio
 from pathlib import Path
 from textwrap import dedent
 
@@ -6,7 +5,7 @@ from agno.agent import Agent
 from agno.tools.mcp import MCPTools
 from dotenv import load_dotenv
 
-from config.llm_config import llm
+from config.llm_config import get_llm
 
 load_dotenv()
 
@@ -25,7 +24,7 @@ async def run_agent_with_mcp(message: str) -> str:
 
             agent = Agent(
                 name="Study buddy",
-                model=llm,
+                model=get_llm(),
                 tools=[mcp_tools],
                 instructions=dedent("""\
                     You are a AI study assistant. Use the tools to access the file system.
@@ -59,7 +58,7 @@ async def run_agent(message: str) -> str:
     try:
         agent = Agent(
             name="Study buddy",
-            model=llm,
+            model=get_llm(),
             instructions=dedent("""\
                     You are a AI study assistant. Use the tools to access the file system.
                     - Use headings to organize your responses

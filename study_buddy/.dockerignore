@@ -1,0 +1,101 @@
+# Git
+.git
+.gitignore
+
+# Python
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Documentation
+*.md
+!README.md
+docs/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# Logs
+*.log
+logs/
+
+# Data files
+data/
+*.csv
+*.json
+!requirements.json
+
+# Docker
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Scripts (keep essential ones)
+*.sh
+!manage_ollama.sh
+!init-ollama.sh
+!deploy.sh
+
+.git
+.venv
+__pycache__
+*.pyc
+.pytest_cache
+.idea
+.DS_Store
+*.log
+.env.local
+.env.development
+.env.test
+.env.production
+tests/
+*.md
+uv.lock
+.python-version
+

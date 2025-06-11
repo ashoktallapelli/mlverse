@@ -1,3 +1,4 @@
+import asyncio
 from pathlib import Path
 from textwrap import dedent
 
@@ -60,7 +61,7 @@ async def run_agent(message: str) -> str:
             name="Study buddy",
             model=get_llm(),
             instructions=dedent("""\
-                    You are a AI study assistant. Use the tools to access the file system.
+                    You are a AI study assistant.
                     - Use headings to organize your responses
                     - Be concise and focus on relevant information\
                 """),

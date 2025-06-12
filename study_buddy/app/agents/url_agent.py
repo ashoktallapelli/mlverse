@@ -24,7 +24,7 @@ class URLAgent:
             urls=self.urls,
             vector_db=LanceDb(
                 uri="data/lancedb",
-                table_name="agno_docs",
+                table_name="url_docs",
                 search_type=SearchType.hybrid,
                 embedder=embedder,
             ),

@@ -20,4 +20,11 @@ dependencies = [
     "uvicorn>=0.34.3",
     "chromadb>=1.0.12",
     "groq",
+    "sqlalchemy>=2.0.41",
+    "cohere>=5.15.0",
+    "infinity-client>=0.0.76",
+    "lancedb>=0.23.0",
+    "tantivy>=0.24.0",
+    "pylance>=0.29.0",
+    "beautifulsoup4>=4.13.4",
 ]

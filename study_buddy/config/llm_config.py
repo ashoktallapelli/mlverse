@@ -1,5 +1,7 @@
 import os
 from functools import lru_cache
+
+from agno.embedder.sentence_transformer import SentenceTransformerEmbedder
 from agno.models.ollama import Ollama
 from agno.models.groq import Groq
 from dotenv import load_dotenv
@@ -32,3 +34,12 @@ def get_llm():
         return get_groq()
     else:
         raise ValueError(f"Invalid LLM_PROVIDER: {LLM_PROVIDER}")
+
+
+def get_embedding_model():
+    embedder = SentenceTransformerEmbedder(
+        id="sentence-transformers/all-MiniLM-L6-v2",  # Fast and good quality
+        # model="all-mpnet-base-v2",  # Higher quality but slower
+        # model="multi-qa-mpnet-base-dot-v1",  # Good for Q&A
+    )
+    return embedder

@@ -4,7 +4,6 @@ from urllib.parse import urlparse
 
 import requests
 
-
 def classify_pdf_path(path: str) -> str:
     """
     Classify the input path as:
@@ -65,3 +64,24 @@ def classify_pdf_list(
                 url_paths.append(p)
 
     return local_paths, url_paths
+
+
+def filter_pdf_and_non_pdf(
+        paths: List[str],
+        verify_urls: bool = False
+) -> Tuple[List[str], List[str]]:
+    """
+    Filters the given paths into PDF and non-PDF lists.
+
+    Returns:
+      - pdf_paths: all local or reachable URL PDFs
+      - non_pdf_paths: all other paths
+    """
+    # Get classified PDF lists
+    pdf_local, pdf_urls = classify_pdf_list(paths, verify_urls)
+    # Combine into one list of valid PDFs
+    pdf_paths: List[str] = pdf_local + pdf_urls
+    # Everything else is non-PDF
+    non_pdf_paths: List[str] = [p for p in paths if p not in pdf_paths]
+
+    return pdf_paths, non_pdf_paths

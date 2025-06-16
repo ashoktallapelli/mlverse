@@ -71,6 +71,17 @@ async def run_team_agent(
         return "Error: failed to generate team response."
 
 
+async def answer_with_pdfs(
+    question: str,
+    pdf_paths: Optional[List[str]] = None,
+    url_pdfs: Optional[List[str]] = None,
+) -> str:
+    """Convenience wrapper to query PDFs using the team agent."""
+    if not pdf_paths and not url_pdfs:
+        return "No PDF sources provided."
+    return await run_team_agent(question, local_pdfs=pdf_paths, url_pdfs=url_pdfs)
+
+
 import asyncio
 from app.agents.pdf_agent import PdfAgent
 from app.agents.url_agent import URLAgent

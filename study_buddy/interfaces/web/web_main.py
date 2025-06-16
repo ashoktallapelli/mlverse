@@ -7,7 +7,8 @@ from app.ingestion.chunker import chunk_text
 from app.ingestion.pdf_reader import extract_text_from_pdf
 from app.embedding.indexer import index_text_chunks
 from app.embedding.retriever import retrieve_relevant_chunks
-from app.agents.study_agent import answer_with_context
+from pathlib import Path
+from app.agents.study_agent import answer_with_pdfs
 from config.settings import VECTOR_DB
 
 st.set_page_config(page_title="📘 AI Study Buddy", layout="wide")
@@ -18,6 +19,8 @@ if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
 if "contexts" not in st.session_state:
     st.session_state.contexts = []
+if "pdf_paths" not in st.session_state:
+    st.session_state.pdf_paths = []
 
 # --- Sidebar: File Upload and Actions
 with st.sidebar:
@@ -31,24 +34,31 @@ with st.sidebar:
             chunks = chunk_text(text)
             embeddings = embed_text(chunks)
             index_text_chunks(chunks, embeddings)
+            upload_dir = Path("data/uploads")
+            upload_dir.mkdir(parents=True, exist_ok=True)
+            file_path = upload_dir / uploaded_file.name
+            with open(file_path, "wb") as f:
+                f.write(pdf_bytes)
+            st.session_state.pdf_paths.append(str(file_path))
             st.success("✅ PDF processed and indexed!")
 
     if st.button("🧹 Clear Chat"):
         st.session_state.chat_history = []
         st.session_state.contexts = []
+        st.session_state.pdf_paths = []
 
 # --- Chat Input
 st.markdown("### 🧠 Ask a question about your notes")
 question = st.chat_input("Enter your question here...")
 
-def get_data_sync(ques, chunks_):
-    return asyncio.run(answer_with_context(ques, chunks_))
+def get_answer(question):
+    return asyncio.run(answer_with_pdfs(question, st.session_state.pdf_paths))
 
 # --- Process question
 if question:
     with st.spinner("🤔 Retrieving and thinking..."):
         context_chunks = retrieve_relevant_chunks(question)
-        answer = get_data_sync(question, context_chunks)
+        answer = get_answer(question)
 
         # Save to chat history and contexts
         st.session_state.chat_history.append((question, answer))

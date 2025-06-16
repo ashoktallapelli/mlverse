@@ -1,106 +1,109 @@
 import asyncio
-from pathlib import Path
-from textwrap import dedent
+from typing import Optional, List
 
-from agno.agent import Agent
-from agno.tools.mcp import MCPTools
 from dotenv import load_dotenv
 
+from agno.team import Team
+from app.utils.logger import logger
+from app.utils.pdf_utils import filter_pdf_and_non_pdf, classify_pdf_list
 from config.llm_config import get_llm
 
 load_dotenv()
 
 
-async def run_agent_with_mcp(message: str) -> str:
-    """Run the retail banking agent with the given message."""
-    print(f"Starting agent with message: {message}")
+async def run_team_agent(
+    message: str,
+    local_pdfs: Optional[List[str]] = None,
+    url_pdfs: Optional[List[str]] = None,
+) -> str:
+    """
+    Runs the Study Buddy Team agent, coordinating PDF and URL sub-agents to answer a question.
 
-    file_path = str(Path(__file__).parent.parent.parent.parent)
-    print(f"File path: {file_path}")
+    :param message:    The user's query.
+    :param local_pdfs: List of file paths to local PDF documents.
+    :param url_pdfs:   List of URLs pointing to PDF documents.
+    :returns:          Consolidated markdown answer with inline citations.
+    """
+    logger.info("Starting Team agent with message: %s", message)
+
+    # Build sub-agents based on provided sources
+    sub_agents = []
+    if local_pdfs:
+        sub_agents.append(PdfAgent(local_pdfs, local_pdfs=True).agent)
+    if url_pdfs:
+        sub_agents.append(PdfAgent(url_pdfs, local_pdfs=False).agent)
+
+    if not sub_agents:
+        warning = "No PDF sources provided; nothing to process."
+        logger.warning(warning)
+        return warning
+
+    # Initialize the team
+    study_team = Team(
+        name="Study Buddy Team",
+        mode="coordinate",
+        model=get_llm(),
+        members=sub_agents,
+        instructions=[
+            "You have access to two knowledge bases: local PDFs and URL-based PDFs.",
+            f"Answer the user's question: \"{message}\"",
+            "Pull facts from all sources, merge into a coherent markdown summary,",
+            "and inline-cite each fact with its filename or URL.",
+        ],
+        markdown=True,
+        show_members_responses=False,
+        enable_agentic_context=True,
+        add_datetime_to_instructions=True,
+        success_criteria=(
+            "Produce one consolidated answer summarizing content from all PDFs "
+            "with inline citations."
+        ),
+    )
 
     try:
-        print("Connecting to MCP server...")
-        async with MCPTools(transport="streamable-http", url="http://127.0.0.1:8000/mcp/") as mcp_tools:
-            print("MCP connection established")
-
-            agent = Agent(
-                name="Study buddy",
-                model=get_llm(),
-                tools=[mcp_tools],
-                instructions=dedent("""\
-                    You are a AI study assistant. Use the tools to access the file system.
-                    - Use headings to organize your responses
-                    - Be concise and focus on relevant information\
-                """),
-                markdown=True,
-                show_tool_calls=True,
-            )
-            print("Agent created")
-
-            # Run the agent
-            print("Running agent...")
-            print("=" * 50)
-            response = await agent.arun(message, stream=False)
-            print("=" * 50)
-            print("Agent finished")
-            return response.content
+        logger.info("Running Team agent...")
+        response = await study_team.arun(message=message, stream=False)
+        logger.info("Team agent completed successfully.")
+        return response.content if hasattr(response, 'content') else str(response)
 
     except Exception as e:
-        print(f"Error occurred: {e}")
-        import traceback
-        traceback.print_exc()
-        return f"Error: {e}"
+        logger.error("Error in Team agent", exc_info=e)
+        return "Error: failed to generate team response."
 
 
-async def run_agent(message: str) -> str:
-    """Run the retail banking agent with the given message."""
-    print(f"Starting agent with message: {message}")
+import asyncio
+from app.agents.pdf_agent import PdfAgent
+from app.agents.url_agent import URLAgent
 
-    try:
-        agent = Agent(
-            name="Study buddy",
-            model=get_llm(),
-            instructions=dedent("""\
-                    You are a AI study assistant.
-                    - Use headings to organize your responses
-                    - Be concise and focus on relevant information\
-                """),
-            markdown=True,
-            show_tool_calls=True,
+
+async def smoke_test():
+    pdf_agent = PdfAgent(
+        urls=["/Users/ashoktallapelli/Downloads/pdfs/datamall.pdf"],
+        local_pdfs=True
+    ).agent
+    resp = await pdf_agent.arun("List the key topics covered in this PDF.", stream=False)
+    print("PDF Agent response:\n", resp.content)
+
+    url_agent = URLAgent(
+        ["https://docs.agno.com/introduction.md"]
+    ).agent
+    resp2 = await url_agent.arun("What is Agno?", stream=False)
+    print("URL Agent response:\n", resp2.content)
+
+
+# asyncio.run(smoke_test())
+
+
+if __name__ == "__main__":
+    paths = ["/Users/ashoktallapelli/Downloads/pdfs/resume.pdf"]
+    pdfs, non_pdfs = filter_pdf_and_non_pdf(paths)
+    _local_pdfs, _url_pdfs = classify_pdf_list(pdfs, verify_urls=True)
+
+    answer = asyncio.run(
+        run_team_agent(
+            "Summarize all the key insights from these documents and pages.",
+            _local_pdfs,
+            _url_pdfs,
         )
-        print("Agent created")
-
-        # Run the agent
-        print("Running agent...")
-        print("=" * 50)
-        response = await agent.arun(message, stream=False)
-        print("=" * 50)
-        print("Agent finished")
-        return response.content
-
-    except Exception as e:
-        print(f"Error occurred: {e}")
-        import traceback
-        traceback.print_exc()
-        return f"Error: {e}"
-
-
-# if __name__ == "__main__":
-#     # Basic example - exploring project license
-#     async def main():
-#         response = await run_agent("List all the endpoints")
-#         print(response)
-#
-#
-#     asyncio.run(main())
-
-
-async def answer_with_context(question, context_chunks):
-    context = "\n".join(context_chunks)
-    prompt = f"""You are a helpful study assistant. Use the following notes to answer the question.
-    Context: {context}
-    Question: {question}
-    Answer:"""
-
-    response = await run_agent(prompt)
-    return response
+    )
+    print(answer)

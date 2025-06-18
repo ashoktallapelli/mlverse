@@ -4,6 +4,7 @@ from urllib.parse import urlparse
 
 import requests
 
+
 def classify_pdf_path(path: str) -> str:
     """
     Classify the input path as:
@@ -85,3 +86,26 @@ def filter_pdf_and_non_pdf(
     non_pdf_paths: List[str] = [p for p in paths if p not in pdf_paths]
 
     return pdf_paths, non_pdf_paths
+
+
+def _detect_content_type(content_path: str) -> str:
+    """Auto-detect content type based on path/URL"""
+    if _is_valid_youtube_url(content_path):
+        return 'youtube'
+    elif ',' in content_path and all(_is_valid_youtube_url(url.strip()) for url in content_path.split(',')):
+        return 'youtube'
+    else:
+        return 'pdf'
+
+
+def _is_valid_youtube_url(url: str) -> bool:
+    """Check if URL is a valid YouTube URL"""
+    youtube_domains = [
+        'youtube.com',
+        'www.youtube.com',
+        'youtu.be',
+        'm.youtube.com'
+    ]
+
+    url_lower = url.lower()
+    return any(domain in url_lower for domain in youtube_domains)

@@ -4,8 +4,8 @@ import pytest
 from urllib.parse import urlparse
 from unittest.mock import patch, MagicMock
 
-# Assume your functions live in pdf_utils.py
-from app.utils.pdf_utils import (
+# Assume your functions live in app_utils.py
+from app.utils.app_utils import (
     classify_pdf_path,
     is_url_reachable,
     classify_pdf_list,

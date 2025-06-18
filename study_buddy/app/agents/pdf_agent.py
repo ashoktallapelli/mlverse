@@ -1,3 +1,4 @@
+import shutil
 from pathlib import Path
 from typing import List, Optional
 
@@ -20,6 +21,8 @@ class PdfAgent:
         self.urls = urls or []
         self.local_pdfs = local_pdfs
 
+        self._clear_vector_data()
+
         self.llm = get_llm()
         self.embedder = get_embedding_model()
         self.vector_db = LanceDb(
@@ -33,18 +36,32 @@ class PdfAgent:
             db_file="data/pdf_agent.db",
         )
 
-        # build knowledge & agent
         self.knowledge = self._build_knowledge()
         self.agent = self._build_agent()
+
+    def _clear_vector_data(self):
+        """Delete LanceDB and optionally SQLite storage before building new agent"""
+        lance_path = Path("data/lancedb/pdf_docs")
+        sqlite_path = Path("data/pdf_agent.db")
+
+        if lance_path.exists():
+            logger.info("Clearing vector DB at %s", lance_path)
+            shutil.rmtree(lance_path)
+
+        if sqlite_path.exists():
+            logger.info("Deleting session DB at %s", sqlite_path)
+            sqlite_path.unlink()
 
     def _build_knowledge(self):
         if self.local_pdfs:
             if not self.urls:
                 raise ValueError("When using local_pdfs=True, you must pass at least one file path")
-            pdf_dir = Path(self.urls[0]).parent
-            logger.info("Loading PDFs from directory: %s", pdf_dir)
+
+            pdf_path = Path(self.urls[0])
+            logger.info("Loading single PDF file: %s", pdf_path)
+
             return PDFKnowledgeBase(
-                path=str(pdf_dir),
+                path=str(pdf_path),
                 vector_db=self.vector_db,
             )
         else:
@@ -55,8 +72,7 @@ class PdfAgent:
             )
 
     def _build_agent(self) -> Agent:
-        # index / load your knowledge
-        self.knowledge.load(recreate=False)
+        self.knowledge.load(recreate=True)
 
         agent_config = {
             "name": "Study Buddy",

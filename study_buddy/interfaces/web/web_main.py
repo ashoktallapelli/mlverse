@@ -12,10 +12,14 @@ if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
 if "agent_built" not in st.session_state:
     st.session_state.agent_built = False
-if "current_content_path" not in st.session_state:
-    st.session_state.current_content_path = ""
+if "pdf_content_path" not in st.session_state:  # Separate for PDF
+    st.session_state.pdf_content_path = ""
+if "youtube_content_path" not in st.session_state:  # Separate for YouTube
+    st.session_state.youtube_content_path = ""
 if "agent_type" not in st.session_state:
     st.session_state.agent_type = "pdf"
+if "previous_agent_type" not in st.session_state:
+    st.session_state.previous_agent_type = "pdf"
 
 # --- Sidebar: Content Setup and Agent Building
 with st.sidebar:
@@ -28,11 +32,19 @@ with st.sidebar:
         index=0
     )
 
-    # Update agent type in session state
-    if agent_type == "📄 PDF Document":
-        st.session_state.agent_type = "pdf"
+    # Update agent type in session state and detect changes
+    current_agent_type = "pdf" if agent_type == "📄 PDF Document" else "youtube"
+
+    # Check if agent type changed
+    if st.session_state.previous_agent_type != current_agent_type:
+        st.session_state.agent_type = current_agent_type
+        st.session_state.previous_agent_type = current_agent_type
+        # Reset agent when switching types
+        if st.session_state.agent_built:
+            reset_agents()
+            st.session_state.agent_built = False
     else:
-        st.session_state.agent_type = "youtube"
+        st.session_state.agent_type = current_agent_type
 
     content_path = ""
 
@@ -52,7 +64,8 @@ with st.sidebar:
             uploaded_file = st.file_uploader(
                 "Upload a PDF file",
                 type=["pdf"],
-                help="Select a PDF file from your computer"
+                help="Select a PDF file from your computer",
+                key="pdf_file_uploader"
             )
 
             if uploaded_file is not None:
@@ -60,19 +73,19 @@ with st.sidebar:
                 with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tmp_file:
                     tmp_file.write(uploaded_file.read())
                     content_path = tmp_file.name
-                    st.session_state.current_content_path = content_path
+                    st.session_state.pdf_content_path = content_path
 
                 st.success(f"📄 File uploaded: {uploaded_file.name}")
 
         else:  # URL/Path input
             content_path = st.text_input(
                 "Enter PDF URL or file path:",
-                value=st.session_state.current_content_path,
+                value=st.session_state.pdf_content_path,  # Use PDF-specific state
                 placeholder="e.g., https://example.com/file.pdf or /path/to/file.pdf",
                 help="Enter either a URL to a PDF file or a local file path",
                 key="pdf_path_input"
             )
-            st.session_state.current_content_path = content_path
+            st.session_state.pdf_content_path = content_path
 
     # YouTube Input Section
     else:
@@ -80,7 +93,7 @@ with st.sidebar:
 
         youtube_urls = st.text_area(
             "Enter YouTube URL(s):",
-            value=st.session_state.current_content_path,
+            value=st.session_state.youtube_content_path,  # Use YouTube-specific state
             placeholder="Enter one or more YouTube URLs (one per line or comma-separated)\n\nExample:\nhttps://www.youtube.com/watch?v=dQw4w9WgXcQ\nhttps://youtu.be/dQw4w9WgXcQ",
             help="Enter YouTube URLs separated by commas or new lines",
             height=100,
@@ -96,10 +109,12 @@ with st.sidebar:
                     urls_list.append(url)
 
             content_path = ','.join(urls_list)
-            st.session_state.current_content_path = content_path
+            st.session_state.youtube_content_path = content_path
 
             if urls_list:
                 st.info(f"📹 {len(urls_list)} YouTube URL(s) entered")
+        else:
+            st.session_state.youtube_content_path = ""
 
     # Build Agent Button
     st.markdown("---")
@@ -156,7 +171,9 @@ with st.sidebar:
         if st.button("🔄 Reset Agent", use_container_width=True):
             reset_agents()
             st.session_state.agent_built = False
-            st.session_state.current_content_path = ""
+            # Clear both content paths
+            st.session_state.pdf_content_path = ""
+            st.session_state.youtube_content_path = ""
             st.session_state.chat_history = []
             st.rerun()
 

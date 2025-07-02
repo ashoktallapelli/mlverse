@@ -1,106 +1,136 @@
 import asyncio
-from pathlib import Path
-from textwrap import dedent
+from typing import Optional
 
-from agno.agent import Agent
-from agno.tools.mcp import MCPTools
 from dotenv import load_dotenv
 
-from config.llm_config import get_llm
+from app.agents.pdf_agent import PdfAgent
+from app.agents.youtube_agent import YouTubeAgent
+from app.utils.app_utils import classify_pdf_path, is_valid_youtube_url, detect_content_type
+from app.utils.logger import logger
 
 load_dotenv()
 
-
-async def run_agent_with_mcp(message: str) -> str:
-    """Run the retail banking agent with the given message."""
-    print(f"Starting agent with message: {message}")
-
-    file_path = str(Path(__file__).parent.parent.parent.parent)
-    print(f"File path: {file_path}")
-
-    try:
-        print("Connecting to MCP server...")
-        async with MCPTools(transport="streamable-http", url="http://127.0.0.1:8000/mcp/") as mcp_tools:
-            print("MCP connection established")
-
-            agent = Agent(
-                name="Study buddy",
-                model=get_llm(),
-                tools=[mcp_tools],
-                instructions=dedent("""\
-                    You are a AI study assistant. Use the tools to access the file system.
-                    - Use headings to organize your responses
-                    - Be concise and focus on relevant information\
-                """),
-                markdown=True,
-                show_tool_calls=True,
-            )
-            print("Agent created")
-
-            # Run the agent
-            print("Running agent...")
-            print("=" * 50)
-            response = await agent.arun(message, stream=False)
-            print("=" * 50)
-            print("Agent finished")
-            return response.content
-
-    except Exception as e:
-        print(f"Error occurred: {e}")
-        import traceback
-        traceback.print_exc()
-        return f"Error: {e}"
+# Global variables to cache agents
+pdf_agent: Optional[PdfAgent] = None
+youtube_agent: Optional[YouTubeAgent] = None
+current_agent_type: Optional[str] = None  # 'pdf' or 'youtube'
 
 
-async def run_agent(message: str) -> str:
-    """Run the retail banking agent with the given message."""
-    print(f"Starting agent with message: {message}")
+def build_pdf_agent(pdf_path: str):
+    """Build PDF agent from PDF path"""
+    global pdf_agent, current_agent_type
 
-    try:
-        agent = Agent(
-            name="Study buddy",
-            model=get_llm(),
-            instructions=dedent("""\
-                    You are a AI study assistant.
-                    - Use headings to organize your responses
-                    - Be concise and focus on relevant information\
-                """),
-            markdown=True,
-            show_tool_calls=True,
-        )
-        print("Agent created")
+    pdf_type = classify_pdf_path(pdf_path)
 
-        # Run the agent
-        print("Running agent...")
-        print("=" * 50)
-        response = await agent.arun(message, stream=False)
-        print("=" * 50)
-        print("Agent finished")
-        return response.content
+    if pdf_type == 'local':
+        pdf_agent = PdfAgent([pdf_path], local_pdfs=True)
+    elif pdf_type == 'url':
+        pdf_agent = PdfAgent([pdf_path], local_pdfs=False)
+    else:
+        raise ValueError(f"Invalid PDF file path: {pdf_path}")
 
-    except Exception as e:
-        print(f"Error occurred: {e}")
-        import traceback
-        traceback.print_exc()
-        return f"Error: {e}"
+    current_agent_type = 'pdf'
+    logger.info(f"PDF agent built successfully with path: {pdf_path}")
 
 
-# if __name__ == "__main__":
-#     # Basic example - exploring project license
-#     async def main():
-#         response = await run_agent("List all the endpoints")
-#         print(response)
-#
-#
-#     asyncio.run(main())
+def build_youtube_agent(youtube_urls: list):
+    """Build YouTube agent from list of YouTube URLs"""
+    global youtube_agent, current_agent_type
+
+    if not youtube_urls:
+        raise ValueError("At least one YouTube URL is required")
+
+    # Validate YouTube URLs
+    for url in youtube_urls:
+        if not is_valid_youtube_url(url):
+            raise ValueError(f"Invalid YouTube URL: {url}")
+
+    youtube_agent = YouTubeAgent(urls=youtube_urls)
+    current_agent_type = 'youtube'
+    logger.info(f"YouTube agent built successfully with URLs: {youtube_urls}")
 
 
-async def answer_with_context(question, context_chunks):
-    context = "\n".join(context_chunks)
-    prompt = f"""You are a helpful study assistant. Use the following notes to answer the question.
-    Context: {context}
-    Question: {question}
-    Answer:"""
+def build_agent(content_path: str, agent_type: str = 'auto'):
+    """
+    Build agent based on content type
 
-    response = await run_agent(prompt)
+    Args:
+        content_path: Path to PDF file or YouTube URL(s) (comma-separated)
+        agent_type: 'pdf', 'youtube', or 'auto' (auto-detect)
+    """
+    global current_agent_type
+
+    if agent_type == 'auto':
+        agent_type = detect_content_type(content_path)
+
+    if agent_type == 'pdf':
+        build_pdf_agent(content_path)
+    elif agent_type == 'youtube':
+        # Handle multiple YouTube URLs (comma-separated)
+        youtube_urls = [url.strip() for url in content_path.split(',')]
+        build_youtube_agent(youtube_urls)
+    else:
+        raise ValueError(f"Unsupported agent type: {agent_type}")
+
+
+async def use_agent(question: str) -> str:
+    """Use the currently active agent to answer questions"""
+    global pdf_agent, youtube_agent, current_agent_type
+
+    if current_agent_type == 'pdf':
+        if not pdf_agent:
+            raise RuntimeError("PDF agent has not been initialized. Call build_agent() first.")
+        response = await pdf_agent.get_response(question)
+    elif current_agent_type == 'youtube':
+        if not youtube_agent:
+            raise RuntimeError("YouTube agent has not been initialized. Call build_agent() first.")
+        response = await youtube_agent.get_response(question)
+    else:
+        raise RuntimeError("No agent has been initialized. Call build_agent() first.")
+
     return response
+
+
+def get_agent_info() -> dict:
+    """Get information about the currently active agent"""
+    global current_agent_type
+
+    return {
+        'type': current_agent_type,
+        'is_active': current_agent_type is not None,
+        'pdf_ready': pdf_agent is not None,
+        'youtube_ready': youtube_agent is not None
+    }
+
+
+def reset_agents():
+    """Reset all agents and clear cache"""
+    global pdf_agent, youtube_agent, current_agent_type
+
+    pdf_agent = None
+    youtube_agent = None
+    current_agent_type = None
+    logger.info("All agents have been reset")
+
+
+
+
+
+# Legacy function for backward compatibility
+def build_pdf_agent_legacy(pdf_path: str):
+    """Legacy function - use build_agent() instead"""
+    build_pdf_agent(pdf_path)
+
+
+# Example usage
+async def main():
+    global pdf_agent
+    pdf_agent = None
+    # build_agent("https://www.youtube.com/watch?v=K5KVEU3aaeQ")
+    build_agent("https://www.youtube.com/watch?v=FwOTs4UxQS4")
+    answer = await use_agent("Summarize the contents of the video file")
+    print("Agent response:\n", answer)
+
+
+if __name__ == "__main__":
+    asyncio.run(main())

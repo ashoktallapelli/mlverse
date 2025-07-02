@@ -1,5 +1,9 @@
 import os
 from functools import lru_cache
+
+import torch
+from agno.embedder.sentence_transformer import SentenceTransformerEmbedder
+from sentence_transformers import SentenceTransformer
 from agno.models.ollama import Ollama
 from agno.models.groq import Groq
 from dotenv import load_dotenv
@@ -32,3 +36,19 @@ def get_llm():
         return get_groq()
     else:
         raise ValueError(f"Invalid LLM_PROVIDER: {LLM_PROVIDER}")
+
+
+def get_embedding_model():
+    # 1. Detect MPS (Apple GPU) or fall back to CPU
+    device = "mps" if torch.backends.mps.is_available() else "cpu"
+
+    # 2. Create the SBERT model on the chosen device
+    st_model = SentenceTransformer("all-MiniLM-L6-v2", device=device)  # :contentReference[oaicite:0]{index=0}
+
+    # 3. Inject that client into the AGNO embedder
+    embedder = SentenceTransformerEmbedder(
+        id="sentence-transformers/all-MiniLM-L6-v2",
+        sentence_transformer_client=st_model
+    )
+    return embedder
+

@@ -3,7 +3,7 @@ name = "study-buddy"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = ">=3.12"
 dependencies = [
     "agno>=1.5.9",
     "faiss-cpu>=1.11.0",
@@ -20,4 +20,19 @@ dependencies = [
     "uvicorn>=0.34.3",
     "chromadb>=1.0.12",
     "groq",
+    "sqlalchemy>=2.0.41",
+    "cohere>=5.15.0",
+    "infinity-client>=0.0.76",
+    "lancedb>=0.23.0",
+    "tantivy>=0.24.0",
+    "pylance>=0.29.0",
+    "beautifulsoup4>=4.13.4",
+    "youtube-transcript-api>=1.1.0",
+    "openai>=1.86.0",
+    "pypdf>=5.6.0",
+    "pytest>=8.4.0",
+    "torch>=2.7.1",
+    "torchvision>=0.22.1",
+    "torchaudio>=2.7.1",
+    "chainlit>=2.5.5",
 ]

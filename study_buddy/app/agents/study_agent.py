@@ -1,13 +1,12 @@
 import asyncio
-import shutil
-from pathlib import Path
 from typing import Optional
+
 from dotenv import load_dotenv
 
 from app.agents.pdf_agent import PdfAgent
 from app.agents.youtube_agent import YouTubeAgent
+from app.utils.app_utils import classify_pdf_path, is_valid_youtube_url, detect_content_type
 from app.utils.logger import logger
-from app.utils.app_utils import classify_pdf_path
 
 load_dotenv()
 
@@ -43,7 +42,7 @@ def build_youtube_agent(youtube_urls: list):
 
     # Validate YouTube URLs
     for url in youtube_urls:
-        if not _is_valid_youtube_url(url):
+        if not is_valid_youtube_url(url):
             raise ValueError(f"Invalid YouTube URL: {url}")
 
     youtube_agent = YouTubeAgent(urls=youtube_urls)
@@ -62,7 +61,7 @@ def build_agent(content_path: str, agent_type: str = 'auto'):
     global current_agent_type
 
     if agent_type == 'auto':
-        agent_type = _detect_content_type(content_path)
+        agent_type = detect_content_type(content_path)
 
     if agent_type == 'pdf':
         build_pdf_agent(content_path)
@@ -127,7 +126,8 @@ def build_pdf_agent_legacy(pdf_path: str):
 async def main():
     global pdf_agent
     pdf_agent = None
-    build_agent("https://www.youtube.com/watch?v=K5KVEU3aaeQ")
+    # build_agent("https://www.youtube.com/watch?v=K5KVEU3aaeQ")
+    build_agent("https://www.youtube.com/watch?v=FwOTs4UxQS4")
     answer = await use_agent("Summarize the contents of the video file")
     print("Agent response:\n", answer)
 

@@ -88,17 +88,17 @@ def filter_pdf_and_non_pdf(
     return pdf_paths, non_pdf_paths
 
 
-def _detect_content_type(content_path: str) -> str:
+def detect_content_type(content_path: str) -> str:
     """Auto-detect content type based on path/URL"""
-    if _is_valid_youtube_url(content_path):
+    if is_valid_youtube_url(content_path):
         return 'youtube'
-    elif ',' in content_path and all(_is_valid_youtube_url(url.strip()) for url in content_path.split(',')):
+    elif ',' in content_path and all(is_valid_youtube_url(url.strip()) for url in content_path.split(',')):
         return 'youtube'
     else:
         return 'pdf'
 
 
-def _is_valid_youtube_url(url: str) -> bool:
+def is_valid_youtube_url(url: str) -> bool:
     """Check if URL is a valid YouTube URL"""
     youtube_domains = [
         'youtube.com',

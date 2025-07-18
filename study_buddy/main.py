@@ -23,5 +23,5 @@ if __name__ == "__main__":
     elif args.mode == "api":
         run_api()
     else:
-        print("Invalid mode. Choose from 'cli', 'web', 'api', or 'tui'.")
+        print("Invalid mode. Choose from 'cli', 'web', or 'api''.")
         sys.exit(1)
